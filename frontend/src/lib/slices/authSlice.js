@@ -15,7 +15,7 @@ export const loginUser = createAsyncThunk(
     try {
       await axiosInstance.get("/sanctum/csrf-cookie");
 
-      const response = await axiosInstance.post("/api/login", {
+      const response = await axiosInstance.post("/login", {
         email,
         password,
       });
@@ -32,7 +32,7 @@ export const registerUser = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       await axiosInstance.get("/sanctum/csrf-cookie");
-      const response = await axiosInstance.post("/api/register", data);
+      const response = await axiosInstance.post("/register", data);
 
       return response.data;
     } catch (error) {
@@ -56,6 +56,9 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.statusCode = action.payload.code;
         state.isAuthenticated = true;
+        if (action.payload.code !== 200) {
+          state.error = action.payload.message; 
+        }
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
@@ -71,6 +74,9 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.statusCode = action.payload.code;
         state.isAuthenticated = true;
+        if (action.payload.code !== 200) {
+          state.error = action.payload.message; 
+        }
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;

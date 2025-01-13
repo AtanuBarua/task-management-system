@@ -1,11 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 
 class AuthController extends Controller
 {
@@ -24,8 +22,11 @@ class AuthController extends Controller
             'role' => 3
         ]);
 
+        $token = $user->createToken('authToken')->plainTextToken;
+
         return response()->json([
             'message' => 'User registered successfully',
+            'token' => $token,
             'user' => $user,
             'code' => 200
         ], 200);
@@ -37,18 +38,22 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::attempt($request->only(['email','password']))) {
-            $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
-                'message' => 'Login successful',
-                'code' => 200,
-                'user' => $user
-            ]);
+                'message' => 'Invalid credentials',
+                'code' => 401
+            ], 401);
         }
 
+        $token = $user->createToken('authToken')->plainTextToken;
+
         return response()->json([
-            'message' => 'The provided credentials do not match our records.',
-            'code' => 401
+            'message' => 'Login successful',
+            'token' => $token,
+            'user' => $user,
+            'code' => 200
         ]);
     }
 }
